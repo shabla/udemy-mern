@@ -2,7 +2,9 @@ const express = require('express');
 const router = express.Router();
 const gravatar = require('gravatar');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
+const keys = require('../../config/keys');
 const User = require('../../models/User');
 
 // @route   GET /api/users/test
@@ -37,7 +39,7 @@ router.post('/register', (req, res) => {
 
             bcrypt.genSalt(10, (err, salt) => {
                 if(err) throw err;
-                
+
                 bcrypt.hash(newUser.password, salt, (err, hash) => {
                     if(err) throw err;
 
@@ -48,6 +50,45 @@ router.post('/register', (req, res) => {
                 });
             });
         });
+});
+
+// @route   POST /api/users/login
+// @desc    Login User / Returning JWT Token
+// @access  Public
+router.post('/login', (req, res) => {
+    const email = req.body.email;
+    const password = req.body.password;
+
+    // Find user by email
+    User.findOne({ email }).then(user => {
+        if(!user) {
+            return res.status(404).json({ email: 'User not found' });
+        }
+
+        // Check password
+        bcrypt.compare(password, user.password)
+            .then(isMatch => {
+                if(!isMatch) {
+                    return res.status(400).json({ password: 'Password incorrect' });
+                }
+
+                const payload = {
+                    id: user.id,
+                    name: user.name,
+                    avatar: user.avatar,
+                };
+                
+                // Sign token
+                jwt.sign(payload, keys.secretOrKey, { expiresIn: 60 * 60 }, (err, token) => {
+                    if(err) throw err;
+
+                    res.json({
+                        success: true,
+                        token: 'Bearer ' + token
+                    });
+                });
+            });
+    });
 });
 
 module.exports = router;
