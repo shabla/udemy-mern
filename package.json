@@ -17,10 +17,14 @@
     "validator": "^10.7.1"
   },
   "devDependencies": {
+    "concurrently": "^4.0.1",
     "nodemon": "^1.18.4"
   },
   "scripts": {
+    "client-install": "yarn --cwd client install",
     "start": "node server.js",
-    "server": "nodemon server.js"
+    "server": "nodemon server.js",
+    "client": "yarn --cwd client start",
+    "dev": "concurrently \"yarn run server\" \"yarn run client\""
   }
 }
