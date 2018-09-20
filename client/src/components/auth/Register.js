@@ -1,14 +1,23 @@
 import React, { Component } from "react";
-import axios from "axios";
-import classnames from "classnames";
+import { withRouter } from "react-router-dom";
+import PropTypes from "prop-types";
 
-export default class Register extends Component {
+import classnames from "classnames";
+import { connect } from "react-redux";
+import { registerUser } from "../../actions/authActions";
+
+class Register extends Component {
+    static propTypes = {
+        registerUser: PropTypes.func.isRequired,
+        auth: PropTypes.object.isRequired,
+        errors: PropTypes.object.isRequired
+    };
+
     state = {
         name: "",
         email: "",
         password: "",
-        password2: "",
-        errors: {}
+        password2: ""
     };
 
     onFieldChanged = e => {
@@ -25,20 +34,11 @@ export default class Register extends Component {
             password2: this.state.password2
         };
 
-        axios
-            .post("/api/users/register", newUser)
-            .then(response => {
-                console.log(response.data);
-            })
-            .catch(err => {
-                this.setState({
-                    errors: err.response.data
-                });
-            });
+        this.props.registerUser(newUser, this.props.history);
     };
 
     render() {
-        const { errors } = this.state;
+        const errors = { ...this.props.errors };
 
         return (
             <div className="register">
@@ -114,3 +114,13 @@ export default class Register extends Component {
         );
     }
 }
+
+const mapToProps = state => ({
+    auth: state.auth,
+    errors: state.errors
+});
+
+export default connect(
+    mapToProps,
+    { registerUser }
+)(withRouter(Register));
